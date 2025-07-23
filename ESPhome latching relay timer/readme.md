@@ -41,5 +41,8 @@ Boot Logo 💀
 
 <img width="620" height="441" alt="image" src="https://github.com/user-attachments/assets/7d4c0280-77e6-48af-8e3c-388c41677810" />
 
+ESPhome Webserver
+<img width="1689" height="955" alt="image" src="https://github.com/user-attachments/assets/2ae6c7bb-ccce-45d0-9e29-d6687c7dc8e4" />
+
 
 
