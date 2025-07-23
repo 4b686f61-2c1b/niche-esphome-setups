@@ -10,6 +10,15 @@
           - For 5v relays, use a 1w resistor to match the resistance. 
     - https://lcsc.com/product-detail/Magnetic-Latching-Relays_QLRELAY-JMX-1125F-012-1HF_C22385003.html
 
+## User interface
+- Real time clock, includes day of the week, date and time formatted in 12H (can be changed)
+- Indicates wheather if the [Home Assisstant API](https://esphome.io/components/api.html) is connected or not.
+- If the [ESPhome Fallback AP](https://esphome.io/components/captive_portal.html#captive-portal) is on, it will be shown on the display
+- Filled or outlined circles to indicate if the switch is on or off
+- Live [WiFi reception](https://esphome.io/components/sensor/wifi_signal.html) updates, UI is capped at 99% due to my OCD
+- (Pending) AC or Standby indicator when the load is active
+- (Pending) Show current, voltage, wattage and total KWH passed through
+
 # Coming Soon!
 - PCB for this prototype
 - ? ESP32-S3 ???
