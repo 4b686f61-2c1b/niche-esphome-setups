@@ -2,7 +2,7 @@ esp32:
   board: esp32dev
   
 substitutions:
-  name: esphome-web-abcdef
+  name: esphome-web-ZmVtYm95
   friendly_name: High Power Disconnect RND TEST
 esphome:
   name: ${name}
@@ -24,14 +24,14 @@ logger:
 # configure encryption
 api:
   encryption: 
-    key: "never gonna give you up" # Go to this URL to get a new API key. https://esphome.io/components/api.html#api-key
+    key: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" # Get a new API key here https://esphome.io/components/api.html#api-key
   id: api_id
-  reboot_timeout: 0s
+  reboot_timeout: 0s  # Do not reboot if disconnected from API
 
 # OTA updates with password
 ota:
   - platform: esphome
-    password: very_secure_ota_password_69 # !secret ota_password
+    password: !secret ota_password
 
 # Allow provisioning Wi-Fi via serial
 improv_serial:
@@ -46,17 +46,17 @@ web_server:
   version: 3
   port: 80
   auth:
-    username: Astolfo # !secret web_server_username
-    password: https://www.youtube.com/watch?v=YiZsTqLfCVM # !secret web_server_password
-  sorting_grou# ps:
+    username: !secret web_server_username
+    password: !secret web_server_password
+  sorting_groups:
     - id: zsdryzdhrhzydrreudjr
       name: "grzrghdxfjutrjstrdjrds"
 
 wifi:
   # Set up a wifi access point
   ap: 
-    ssid: "Femboy Hooters" # !secret ap_ssid
-    password: "KeyboardSmasher_187*(&%2dlk" # !secret ap_password
+    ssid: !secret ap_ssid # Femboy Hooters
+    password: !secret ap_password 
 
   on_connect: 
     then:
@@ -69,7 +69,7 @@ wifi:
         id: wifi_status
         value: 'false'
 
-  reboot_timeout: 0s
+  reboot_timeout: 0s # Do not reboot if disconnected
 
  # Example configuration entry
 globals:
@@ -86,7 +86,7 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-  # Switch States
+  # Switch States for UI
   - id: relay_1_status
     type: bool
     restore_value: 'true'
@@ -122,8 +122,8 @@ switch:
       sn74hc595: sn74hc595_hub
       number: 1
       inverted: false
-    pulse_length: 30ms
-    wait_time: 40ms
+    pulse_length: 150ms # !lambda " return id(relay_pulse_on_ms).state;"
+    wait_time: 200ms
   - platform: hbridge
     id: relay_2
     restore_mode: RESTORE_DEFAULT_OFF
@@ -136,8 +136,8 @@ switch:
       sn74hc595: sn74hc595_hub
       number: 3
       inverted: false
-    pulse_length: 30ms
-    wait_time: 40ms
+    pulse_length: 150ms 
+    wait_time: 200ms
   - platform: hbridge
     id: relay_3
     restore_mode: RESTORE_DEFAULT_OFF
@@ -150,8 +150,8 @@ switch:
       sn74hc595: sn74hc595_hub
       number: 5
       inverted: false
-    pulse_length: 30ms
-    wait_time: 40ms
+    pulse_length: 150ms 
+    wait_time: 200ms
   - platform: hbridge
     id: relay_4
     restore_mode: RESTORE_DEFAULT_OFF
@@ -164,8 +164,8 @@ switch:
       sn74hc595: sn74hc595_hub
       number: 7
       inverted: false
-    pulse_length: 30ms
-    wait_time: 40ms
+    pulse_length: 150ms 
+    wait_time: 200ms
 
   - platform: gpio
     id: relay_5
@@ -298,6 +298,7 @@ image:
   #  transparency: chroma_key
   #  resize: 100x40 # Scaled from 1500x600 / 12
   # Logos for API HASS
+  # Removed because it was extremely poor quality so recreating it in code.
   - file: mdi:home-assistant
     id: api_connected
     type: binary
@@ -363,10 +364,15 @@ time:
       then:
         # ... and update the RTC when the synchronization was successful
         - ds1307.write_time
+        # Just for aesthetics
         #- switch.turn_on: relay_5
         #- delay: 500ms
         #- switch.turn_off: relay_5
     # ...
+
+    # Usually want the load to be provisioned 7pm to 7am and for the whole weekend -> on : else off
+    # If the device had a power failure, then there is a window for it to turn back on or off for at least 2 more chances.
+    # specify minutes or it will spam the logs for the whole hour.
     on_time:
 
       - hours: 19
@@ -405,12 +411,14 @@ time:
 
 display:
   - platform: ssd1306_i2c
+    id: user_interface_display
     i2c_id: bus_a
     model: "SSD1306 128x64"
-    contrast: 50%
+    contrast: 1% # !lambda "return (id(oled_bri).state / 100.0);"
     address: 0x3C
     update_interval: 1s
     lambda: |-
+    # Logo showing
       if (id(boot_active).state <= 3) {
         it.print(5, 0, id(font_4), "Femboy");
         it.print(5, 22, id(font_4), "Engineering");
@@ -434,13 +442,13 @@ display:
 
           if (wir >= 90) {
             it.image(100, 28, id(wifi_strength_4));
-          } else if (wir >= 80) {
+          } else if (wir >= 75) {
             it.image(100, 28, id(wifi_strength_3));
-          } else if (wir >= 60) {
+          } else if (wir >= 50) {
             it.image(100, 28, id(wifi_strength_2));
-          } else if (wir >= 40) {
+          } else if (wir >= 25) {
             it.image(100, 28, id(wifi_strength_1));
-          } else if (wir >= 20) {
+          } else {
             it.image(100, 28, id(wifi_strength_0));
           } 
 
@@ -450,7 +458,11 @@ display:
           char val_832322[10]; // Buffer to hold the string
           sprintf(val_832322, "%.0f%%", wifi_reception_value);
           // Display the Wi-Fi reception value
-          it.print(101, 55, id(font_2), val_832322);
+          if (isnan(wifi_reception_value)) { // NAN values. dont let it print NAN values
+            it.print(101, 55, id(font_2), "...");
+          } else {
+            it.print(101, 55, id(font_2), val_832322);
+          }
         } else {
           it.image(100, 28, id(no_wifi));
           it.print(101, 55, id(font_2), "N/A");
@@ -493,6 +505,7 @@ display:
           it.image(57, ind1pos_y, id(switch_state_off));
         }
 
+        // This is a stub for displaying power readings.
         auto current_time = id(ds1307_time).now(); // Get the current time
         if ((current_time.second % 2) == 0) {
           // Current Sensor
@@ -503,12 +516,18 @@ display:
       }
 
 # Example configuration entry
+# For changing the brightness to extend OLED display life
 number:
   - platform: template
-    name: "Template number"
+    name: "OLED Display Brightness"
     optimistic: True
     min_value: 0
-    max_value: 255
+    max_value: 100
     step: 1
+    initial_value: 1
     restore_value: True
-      
+    id: oled_bri
+    on_value: 
+      then:
+        - lambda: 
+            id(user_interface_display).set_contrast(x / 100.f);
